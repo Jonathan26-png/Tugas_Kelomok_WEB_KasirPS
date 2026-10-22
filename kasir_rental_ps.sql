@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 21, 2026 at 11:13 AM
+-- Generation Time: Oct 22, 2026 at 10:28 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -34,6 +34,14 @@ CREATE TABLE `detailpesanan` (
   `qty` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `detailpesanan`
+--
+
+INSERT INTO `detailpesanan` (`iddetailpesanan`, `idpesanan`, `idproduk`, `qty`) VALUES
+(5, 3, 1, 2),
+(7, 3, 3, 10);
+
 -- --------------------------------------------------------
 
 --
@@ -56,8 +64,15 @@ CREATE TABLE `masuk` (
 CREATE TABLE `pesanan` (
   `idpesanan` int(11) NOT NULL,
   `tanggal` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `iduser` int(11) NOT NULL
+  `id_ruang` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `pesanan`
+--
+
+INSERT INTO `pesanan` (`idpesanan`, `tanggal`, `id_ruang`) VALUES
+(3, '2026-10-21 11:55:25', 2);
 
 -- --------------------------------------------------------
 
@@ -69,18 +84,36 @@ CREATE TABLE `produk` (
   `idproduk` int(11) NOT NULL,
   `namaproduk` varchar(30) NOT NULL,
   `deskripsi` varchar(50) NOT NULL,
-  `harga` int(11) NOT NULL,
-  `stok` int(11) NOT NULL
+  `harga` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `produk`
 --
 
-INSERT INTO `produk` (`idproduk`, `namaproduk`, `deskripsi`, `harga`, `stok`) VALUES
-(1, '', 'Tes', 100000, 1),
-(3, '', 'asdasd', 33, 2),
-(4, 'tes3', 'asdasd', 135, 23);
+INSERT INTO `produk` (`idproduk`, `namaproduk`, `deskripsi`, `harga`) VALUES
+(1, 'asds', 'Tes3', 100000),
+(3, 'asdds', 'asdasd', 50000),
+(5, 'asdsas', 'dasd', 250000);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ruang`
+--
+
+CREATE TABLE `ruang` (
+  `id_ruang` int(10) NOT NULL,
+  `namaruang` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ruang`
+--
+
+INSERT INTO `ruang` (`id_ruang`, `namaruang`) VALUES
+(1, 'Ruang PS 1'),
+(2, 'Ruang PS 2');
 
 -- --------------------------------------------------------
 
@@ -130,6 +163,12 @@ ALTER TABLE `produk`
   ADD PRIMARY KEY (`idproduk`);
 
 --
+-- Indexes for table `ruang`
+--
+ALTER TABLE `ruang`
+  ADD PRIMARY KEY (`id_ruang`);
+
+--
 -- Indexes for table `user`
 --
 ALTER TABLE `user`
@@ -143,7 +182,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `detailpesanan`
 --
 ALTER TABLE `detailpesanan`
-  MODIFY `iddetailpesanan` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `iddetailpesanan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `masuk`
@@ -155,13 +194,13 @@ ALTER TABLE `masuk`
 -- AUTO_INCREMENT for table `pesanan`
 --
 ALTER TABLE `pesanan`
-  MODIFY `idpesanan` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `idpesanan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `produk`
 --
 ALTER TABLE `produk`
-  MODIFY `idproduk` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `idproduk` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `user`
