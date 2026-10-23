@@ -46,14 +46,15 @@ INSERT INTO `detailpesanan` (`iddetailpesanan`, `idpesanan`, `idproduk`, `qty`) 
 
 --
 -- Table structure for table `masuk`
+-- [DIHAPUS] tabel ini tidak dipakai (stok masuk diwakili menu Produk), jadi dikomentari. Kode lamanya tetap ada di bawah.
 --
 
-CREATE TABLE `masuk` (
-  `idmasuk` int(11) NOT NULL,
-  `idproduk` int(11) NOT NULL,
-  `qty` int(11) NOT NULL,
-  `tanggal` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- [LAMA] CREATE TABLE `masuk` (
+-- [LAMA]   `idmasuk` int(11) NOT NULL,
+-- [LAMA]   `idproduk` int(11) NOT NULL,
+-- [LAMA]   `qty` int(11) NOT NULL,
+-- [LAMA]   `tanggal` timestamp NOT NULL DEFAULT current_timestamp()
+-- [LAMA] ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -63,16 +64,23 @@ CREATE TABLE `masuk` (
 
 CREATE TABLE `pesanan` (
   `idpesanan` int(11) NOT NULL,
-  `tanggal` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `id_ruang` int(10) NOT NULL
+  -- [LAMA] `tanggal` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  -- [BARU] tanpa ON UPDATE, supaya tanggal pesanan tidak berubah setiap kali pesanan di-update (laporan harian jadi akurat)
+  `tanggal` timestamp NOT NULL DEFAULT current_timestamp(),
+  `id_ruang` int(10) NOT NULL,
+  -- [BARU] status pesanan: baru -> diantar -> lunas
+  `status` enum('baru','diantar','lunas') NOT NULL DEFAULT 'baru'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `pesanan`
 --
 
-INSERT INTO `pesanan` (`idpesanan`, `tanggal`, `id_ruang`) VALUES
-(3, '2026-10-21 11:55:25', 2);
+-- [LAMA] INSERT INTO `pesanan` (`idpesanan`, `tanggal`, `id_ruang`) VALUES
+-- [LAMA] (3, '2026-10-21 11:55:25', 2);
+-- [BARU] ditambah kolom status (pesanan contoh dianggap sudah lunas)
+INSERT INTO `pesanan` (`idpesanan`, `tanggal`, `id_ruang`, `status`) VALUES
+(3, '2026-10-21 11:55:25', 2, 'lunas');
 
 -- --------------------------------------------------------
 
@@ -92,9 +100,13 @@ CREATE TABLE `produk` (
 --
 
 INSERT INTO `produk` (`idproduk`, `namaproduk`, `deskripsi`, `harga`) VALUES
-(1, 'asds', 'Tes3', 100000),
-(3, 'asdds', 'asdasd', 50000),
-(5, 'asdsas', 'dasd', 250000);
+-- [LAMA] (1, 'asds', 'Tes3', 100000),
+-- [LAMA] (3, 'asdds', 'asdasd', 50000),
+-- [LAMA] (5, 'asdsas', 'dasd', 250000);
+-- [BARU] data contoh dengan nama yang jelas
+(1, 'Indomie Goreng', 'Mi instan goreng', 8000),
+(3, 'Es Teh Manis', 'Teh manis dingin', 5000),
+(5, 'Kopi Susu', 'Kopi susu gelas', 12000);
 
 -- --------------------------------------------------------
 
@@ -147,8 +159,8 @@ ALTER TABLE `detailpesanan`
 --
 -- Indexes for table `masuk`
 --
-ALTER TABLE `masuk`
-  ADD PRIMARY KEY (`idmasuk`);
+-- [LAMA] ALTER TABLE `masuk`
+-- [LAMA]   ADD PRIMARY KEY (`idmasuk`);
 
 --
 -- Indexes for table `pesanan`
@@ -187,8 +199,8 @@ ALTER TABLE `detailpesanan`
 --
 -- AUTO_INCREMENT for table `masuk`
 --
-ALTER TABLE `masuk`
-  MODIFY `idmasuk` int(11) NOT NULL AUTO_INCREMENT;
+-- [LAMA] ALTER TABLE `masuk`
+-- [LAMA]   MODIFY `idmasuk` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `pesanan`

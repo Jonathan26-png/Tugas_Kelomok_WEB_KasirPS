@@ -33,7 +33,7 @@ $count = mysqli_num_rows($result);
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                 <div class="sb-sidenav-menu">
                     <div class="nav">
-                        <div class="sb-sidenav-menu-heading">MENU</div>
+                        <?php /* LAMA: <div class="sb-sidenav-menu-heading">MENU</div>
 
                         <!-- class="fas fa-tachometer-alt" bisa diubah biar ikon yang di navbar kiri berubah juga -->
 
@@ -51,12 +51,29 @@ $count = mysqli_num_rows($result);
                         </a>
                         <a class="nav-link" href="logout.php">
                             Logout
+                        </a> */ ?>
+                        <div class="sb-sidenav-menu-heading">MENU</div>
+                        <a class="nav-link active" href="index.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
+                            Pesanan
+                        </a>
+                        <a class="nav-link" href="stok.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-utensils"></i></div>
+                            Produk
+                        </a>
+                        <a class="nav-link" href="masuk.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+                            Laporan
+                        </a>
+                        <a class="nav-link" href="logout.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-right-from-bracket"></i></div>
+                            Logout
                         </a>
                     </div>
                 </div>
                 <div class="sb-sidenav-footer">
                     <div class="small">Logged in as:</div>
-                    Start Bootstrap
+                    <?php /* LAMA: Start Bootstrap */ ?>Admin Kasir
                 </div>
             </nav>
         </div>
@@ -65,7 +82,7 @@ $count = mysqli_num_rows($result);
                 <div class="container-fluid px-4">
                     <h1 class="mt-4">Pesanan</h1>
                     <ol class="breadcrumb mb-4">
-                        <li class="breadcrumb-item active">Dashboard</li>
+                        <?php /* LAMA: <li class="breadcrumb-item active">Dashboard</li> */ ?><li class="breadcrumb-item active">Daftar Pesanan</li>
                     </ol>
 
                     <!-- Card Bagian Atas -->
@@ -97,7 +114,9 @@ $count = mysqli_num_rows($result);
                                         <th>Id Pesanan</th>
                                         <th>Tanggal</th>
                                         <th>Ruang</th>
-                                        <th>Jumlah</th>
+                                        <?php /* LAMA: <th>Jumlah</th> */ ?><th>Jumlah Item</th>
+                                        <th>Total Harga</th>
+                                        <th>Status</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -112,9 +131,14 @@ $count = mysqli_num_rows($result);
                                         $idpesanan = $p['idpesanan'];
                                         $tanggal = $p['tanggal'];
                                         $ruang = $p['namaruang'];
+                                        $status = $p['status']; // [BARU] status pesanan
 
                                         $hitungjumlah = mysqli_query($koneksi, "select * from detailpesanan where idpesanan='$idpesanan'");
                                         $jumlah = mysqli_num_rows($hitungjumlah);
+
+                                        // [BARU] total harga pesanan = jumlah (qty x harga) semua item
+                                        $hitungtotal = mysqli_query($koneksi, "select sum(d.qty * pr.harga) as total from detailpesanan d, produk pr where d.idproduk=pr.idproduk and d.idpesanan='$idpesanan'");
+                                        $total = mysqli_fetch_array($hitungtotal)['total'] ?? 0;
                                     ?>
 
                                         <tr>
@@ -122,11 +146,45 @@ $count = mysqli_num_rows($result);
                                             <td><?= $tanggal ?></td>
                                             <td><?= $ruang ?></td>
                                             <td><?= $jumlah ?> </td>
-                                            <td><a href="view.php?idp=<?= $idpesanan; ?>" class="btn btn-primary" target="blank">Tampilkan</a>
-                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#hapus<?= $idpesanan ?>">
-                                                    Delete </button>
+                                            <td><?= rupiah($total) ?></td>
+                                            <td><?= badgeStatus($status) ?></td>
+                                            <?php /* LAMA: <td><a href="view.php?idp=<?= $idpesanan; ?>" class="btn btn-primary" target="blank">Tampilkan</a> */ ?><td><a href="view.php?idp=<?= $idpesanan; ?>" class="btn btn-primary" target="blank">Tampilkan</a>
+                                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#status<?= $idpesanan ?>">Status</button>
+                                            <?php /* LAMA: <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#hapus<?= $idpesanan ?>"> */ ?><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#hapus<?= $idpesanan ?>" <?= ($status == 'lunas') ? 'disabled title="Pesanan lunas tidak bisa dihapus"' : '' ?>>
+                                                    <?php /* LAMA: Delete */ ?>Hapus </button>
                                                 </td>
                                         </tr>
+
+                                        <!-- [BARU] Modal Ubah Status -->
+                                        <div class="modal fade" id="status<?= $idpesanan ?>">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+
+                                                    <div class="modal-header">
+                                                        <h4 class="modal-title">Ubah Status Pesanan #<?= $idpesanan ?></h4>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+
+                                                    <form method="post">
+                                                        <div class="modal-body">
+                                                            Status
+                                                            <select name="status" class="form-control">
+                                                                <?php foreach (daftarStatus() as $kode => $label) { ?>
+                                                                    <option value="<?= $kode ?>" <?= ($kode == $status) ? 'selected' : '' ?>><?= $label ?></option>
+                                                                <?php } ?>
+                                                            </select>
+                                                            <input type="hidden" name="idp" value="<?= $idpesanan ?>">
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-success" name="ubahstatus">Simpan</button>
+                                                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
+                                                        </div>
+                                                    </form>
+
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         <!-- Modal Delete -->
                                         <div class="modal fade" id="hapus<?= $idpesanan ?>">
@@ -149,8 +207,8 @@ $count = mysqli_num_rows($result);
 
                                                         <!-- Modal footer -->
                                                         <div class="modal-footer">
-                                                            <button type="submit" class="btn btn-success" data-bs-dismiss="modal" name="hapuspesanan">Submit</button>
-                                                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                                            <?php /* LAMA: <button type="submit" class="btn btn-success" data-bs-dismiss="modal" name="hapuspesanan">Submit</button> */ ?><button type="submit" class="btn btn-success" name="hapuspesanan">Hapus</button>
+                                                            <?php /* LAMA: <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button> */ ?><button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
                                                         </div>
 
                                                     </form>
@@ -173,12 +231,13 @@ $count = mysqli_num_rows($result);
             <footer class="py-4 bg-light mt-auto">
                 <div class="container-fluid px-4">
                     <div class="d-flex align-items-center justify-content-between small">
-                        <div class="text-muted">Copyright &copy; Your Website 2023</div>
+                        <?php /* LAMA: <div class="text-muted">Copyright &copy; Your Website 2023</div>
                         <div>
                             <a href="#">Privacy Policy</a>
                             &middot;
                             <a href="#">Terms &amp; Conditions</a>
-                        </div>
+                        </div> */ ?>
+                        <div class="text-muted">Kasir Rental PS &copy; 2026</div>
                     </div>
                 </div>
             </footer>
@@ -186,9 +245,9 @@ $count = mysqli_num_rows($result);
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="js/scripts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <script src="assets/demo/chart-area-demo.js"></script>
-    <script src="assets/demo/chart-bar-demo.js"></script>
+    <?php /* LAMA: <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script> */ ?>
+    <?php /* LAMA: <script src="assets/demo/chart-area-demo.js"></script> */ ?>
+    <?php /* LAMA: <script src="assets/demo/chart-bar-demo.js"></script> */ ?>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
     <script src="js/datatables-simple-demo.js"></script>
 </body>
@@ -228,8 +287,8 @@ $count = mysqli_num_rows($result);
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal" name="tambahpesanan">Submit</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                    <?php /* LAMA: <button type="submit" class="btn btn-success" data-bs-dismiss="modal" name="tambahpesanan">Submit</button> */ ?><button type="submit" class="btn btn-success" name="tambahpesanan">Simpan</button>
+                    <?php /* LAMA: <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button> */ ?><button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
                 </div>
             </form>
         </div>
