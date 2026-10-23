@@ -6,7 +6,7 @@ if(!isset($_SESSION['login'])) {
 // yaudah
 } else {
     // sudah login
-    header('location:index.php');
+    header('location:index.php'); exit; // [BARU] exit
 }
 ?>
 
@@ -30,13 +30,13 @@ if(!isset($_SESSION['login'])) {
                         <div class="row justify-content-center">
                             <div class="col-lg-5">
                                 <div class="card shadow-lg border-0 rounded-lg mt-5">
-                                    <div class="card-header"><h3 class="text-center font-weight-light my-4">Login</h3></div>
+                                    <div class="card-header"><?php /* LAMA: <h3 class="text-center font-weight-light my-4">Login</h3> */ ?><h3 class="text-center font-weight-light my-4">Login Kasir Rental PS</h3></div>
                                     <div class="card-body">
 
 
                                         <form method="post">
                                             <div class="form-floating mb-3">
-                                                <input name="username" required class="form-control" id="inputEmail" type="text" placeholder="name@example.com" />
+                                                <input name="username" required class="form-control" id="inputEmail" type="text" placeholder="Username" /> <?php /* LAMA: placeholder="name@example.com" */ ?>
                                                 <label for="inputEmail">Username</label>
                                             </div>
                                             <div class="form-floating mb-3">

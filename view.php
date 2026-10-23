@@ -7,13 +7,23 @@ if (isset($_GET['idp'])) {
 
     $ambilruang = mysqli_query($koneksi, "Select * from pesanan p, ruang r where p.id_ruang=r.id_ruang and p.idpesanan='$idp'");
     $nr = mysqli_fetch_array($ambilruang);
+    // [BARU] kalau id pesanan tidak ditemukan, kembali ke daftar pesanan (sebelumnya muncul warning)
+    if (!$nr) { header('location:index.php'); exit; }
     $ruang = $nr['namaruang'];
+    $status = $nr['status'];          // [BARU] status pesanan ini
+    $lunas = ($status == 'lunas');    // [BARU] pesanan lunas tidak boleh diubah itemnya
 } else {
-    header('location:index.php');
+    header('location:index.php'); exit; // [BARU] exit
 }
-$result = mysqli_query($koneksi, "SELECT * FROM detailpesanan");
+// [LAMA] $result = mysqli_query($koneksi, "SELECT * FROM detailpesanan");  (menghitung item SEMUA pesanan)
+$result = mysqli_query($koneksi, "SELECT * FROM detailpesanan where idpesanan='$idp'");
+
 
 $count = mysqli_num_rows($result);
+
+// [BARU] total yang harus dibayar untuk pesanan ini
+$hitungtotal = mysqli_query($koneksi, "SELECT sum(d.qty * pr.harga) as total FROM detailpesanan d, produk pr WHERE d.idproduk=pr.idproduk AND d.idpesanan='$idp'");
+$total = mysqli_fetch_array($hitungtotal)['total'] ?? 0;
 
 ?>
 
@@ -44,7 +54,7 @@ $count = mysqli_num_rows($result);
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                 <div class="sb-sidenav-menu">
                     <div class="nav">
-                        <div class="sb-sidenav-menu-heading">MENU</div>
+                        <?php /* LAMA: <div class="sb-sidenav-menu-heading">MENU</div>
 
                         <!-- class="fas fa-tachometer-alt" bisa diubah biar ikon yang di navbar kiri berubah juga -->
 
@@ -62,29 +72,46 @@ $count = mysqli_num_rows($result);
                         </a>
                         <a class="nav-link" href="logout.php">
                             Logout
+                        </a> */ ?>
+                        <div class="sb-sidenav-menu-heading">MENU</div>
+                        <a class="nav-link active" href="index.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
+                            Pesanan
+                        </a>
+                        <a class="nav-link" href="stok.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-utensils"></i></div>
+                            Produk
+                        </a>
+                        <a class="nav-link" href="masuk.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+                            Laporan
+                        </a>
+                        <a class="nav-link" href="logout.php">
+                            <div class="sb-nav-link-icon"><i class="fas fa-right-from-bracket"></i></div>
+                            Logout
                         </a>
                     </div>
                 </div>
                 <div class="sb-sidenav-footer">
                     <div class="small">Logged in as:</div>
-                    Start Bootstrap
+                    <?php /* LAMA: Start Bootstrap */ ?>Admin Kasir
                 </div>
             </nav>
         </div>
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
-                    <h1 class="mt-4">Data Pesanan: <?= $idp ?> </h1>
-                    <h4 class="mt-4">Detail Ruang: <?= $ruang; ?></h4>
+                    <?php /* LAMA: <h1 class="mt-4">Data Pesanan: <?= $idp ?> </h1> */ ?><h1 class="mt-4">Detail Pesanan #<?= $idp ?></h1>
+                    <?php /* LAMA: <h4 class="mt-4">Detail Ruang: <?= $ruang; ?></h4> */ ?><?php /* LAMA: <h4 class="mt-4">Ruang: <?= $ruang; ?></h4> */ ?><h4 class="mt-4">Ruang: <?= $ruang; ?> &nbsp; <?= badgeStatus($status) ?></h4>
                     <ol class="breadcrumb mb-4">
-                        <li class="breadcrumb-item active">Dashboard</li>
+                        <?php /* LAMA: <li class="breadcrumb-item active">Dashboard</li> */ ?><li class="breadcrumb-item active">Detail Pesanan</li>
                     </ol>
 
                     <!-- Card Bagian Atas -->
                     <div class="row">
                         <div class="col-xl-3 col-md-6">
                             <div class="card bg-primary text-white mb-4">
-                                <div class="card-body">Jumlah produk : <?= $count ?> </div>
+                                <?php /* LAMA: <div class="card-body">Jumlah produk : <?= $count ?> </div> */ ?><div class="card-body">Jumlah item : <?= $count ?> </div>
 
                             </div>
                         </div>
@@ -92,15 +119,27 @@ $count = mysqli_num_rows($result);
 
 
                     </div>
+                    <?php if ($lunas) { ?>
+                    <div class="alert alert-success">Pesanan ini sudah lunas, item tidak dapat diubah. Gunakan tombol Ubah Status jika perlu koreksi.</div>
+                    <?php } ?>
+                    <!-- [BARU] Total pembayaran -->
+                    <div class="row">
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card bg-success text-white mb-4">
+                                <div class="card-body">Total : <?= rupiah($total) ?></div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Button to Open the Modal -->
-                    <button type="button" class="btn btn-info mb-4" data-bs-toggle="modal" data-bs-target="#myModal">
-                        Tambah Barang
+                    <?php /* LAMA: <button type="button" class="btn btn-info mb-4" data-bs-toggle="modal" data-bs-target="#myModal"> */ ?><button type="button" class="btn btn-info mb-4" data-bs-toggle="modal" data-bs-target="#myModal" <?= $lunas ? 'disabled' : '' ?>>
+                        <?php /* LAMA: Tambah Barang */ ?>Tambah Item
                     </button>
-
+                    <button type="button" class="btn btn-secondary mb-4" data-bs-toggle="modal" data-bs-target="#statusModal">Ubah Status</button>
+                    <a class="btn btn-primary mb-4" href="index.php">Kembali</a>
                     <div class="card mb-4">
                         <div class="card-header">
                             <i class="fas fa-table me-1"></i>
-                            Data Pesanan
+                            <?php /* LAMA: Data Pesanan */ ?>Daftar Item
                         </div>
                         <div class="card-body">
                             <table id="datatablesSimple">
@@ -129,19 +168,20 @@ $count = mysqli_num_rows($result);
                                         $harga = $p['harga'];
                                         $subtotal = $qty * $harga;
                                         $idproduk = $p['idproduk'];
+                                        $idprodukdetail = $p['idproduk']; // [BARU] produk milik baris ini (untuk dropdown Edit)
 
                                     ?>
 
                                         <tr>
                                             <td><?= $i++ ?></td>
                                             <td><?= $namaproduk ?></td>
-                                            <td>Rp.<?= number_format($harga) ?></td>
+                                            <?php /* LAMA: <td>Rp.<?= number_format($harga) ?></td> */ ?><td><?= rupiah($harga) ?></td>
                                             <td><?= number_format($qty) ?> </td>
-                                            <td><?= number_format($subtotal) ?> </td>
-                                            <td><button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#edit<?= $iddetail ?>">
+                                            <?php /* LAMA: <td><?= number_format($subtotal) ?> </td> */ ?><td><?= rupiah($subtotal) ?></td>
+                                            <?php /* LAMA: <td><button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#edit<?= $iddetail ?>"> */ ?><td><button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#edit<?= $iddetail ?>" <?= $lunas ? 'disabled' : '' ?>>
                                                     Edit </button>
-                                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#hapus<?= $iddetail ?>">
-                                                    Delete </button>
+                                                <?php /* LAMA: <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#hapus<?= $iddetail ?>"> */ ?><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#hapus<?= $iddetail ?>" <?= $lunas ? 'disabled' : '' ?>>
+                                                    <?php /* LAMA: Delete */ ?>Hapus </button>
                                             </td>
                                         </tr>
 
@@ -151,7 +191,7 @@ $count = mysqli_num_rows($result);
 
                                                     <!-- Modal Header -->
                                                     <div class="modal-header">
-                                                        <h4 class="modal-title">Edit Barang</h4>
+                                                        <?php /* LAMA: <h4 class="modal-title">Edit Barang</h4> */ ?><h4 class="modal-title">Edit Item</h4>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
 
@@ -159,8 +199,8 @@ $count = mysqli_num_rows($result);
 
                                                         <!-- Modal body -->
                                                         <div class="modal-body">
-                                                            Pilih Barang
-                                                            <select name="idproduk" class="form-control">
+                                                            <?php /* LAMA: Pilih Barang */ ?>Pilih Produk
+                                                            <?php /* LAMA: <select name="idproduk" class="form-control">
 
                                                                 <?php
                                                                 $getproduk = mysqli_query($koneksi, "select * from produk where idproduk not in (select idproduk from detailpesanan where idpesanan='$idp')");
@@ -185,14 +225,28 @@ $count = mysqli_num_rows($result);
 
                                                             }
                                                             ?>
-                                                            <input type="number" name="qty" class="form-control mt-4" value="<?= $jumlah ?>" placeholder="jumlah" min="1" required>
+                                                            <input type="number" name="qty" class="form-control mt-4" value="<?= $jumlah ?>" placeholder="jumlah" min="1" required> */ ?>
+                                                            <select name="idproduk" class="form-control">
+                                                                <?php
+                                                                // [BARU] produk baris ini ikut ditampilkan & otomatis terpilih (filter mengecualikan baris ini saja)
+                                                                $getproduk = mysqli_query($koneksi, "select * from produk where idproduk not in (select idproduk from detailpesanan where idpesanan='$idp' and iddetailpesanan!='$iddetail')");
+
+                                                                while ($pl = mysqli_fetch_array($getproduk)) {
+                                                                    $pilih = ($pl['idproduk'] == $idprodukdetail) ? 'selected' : '';
+                                                                ?>
+                                                                    <option value="<?= $pl['idproduk'] ?>" <?= $pilih ?>><?= $pl['namaproduk'] ?></option>
+                                                                <?php
+                                                                }
+                                                                ?>
+                                                            </select>
+                                                            <input type="number" name="qty" class="form-control mt-4" value="<?= $qty ?>" placeholder="jumlah" min="1" required>
                                                              <input type="hidden" name="idp" value="<?= $idp; ?>">
                                                               <input type="hidden" name="idpr" value="<?= $iddetail ?>">
                                                            
                                                         </div>
                                                         <div class="modal-footer">
-                                                            <button type="submit" class="btn btn-success" name="editdetail">Submit</button>
-                                                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                                            <?php /* LAMA: <button type="submit" class="btn btn-success" name="editdetail">Submit</button> */ ?><button type="submit" class="btn btn-success" name="editdetail">Simpan</button>
+                                                            <?php /* LAMA: <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button> */ ?><button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -206,7 +260,7 @@ $count = mysqli_num_rows($result);
 
                                                     <!-- Modal Header -->
                                                     <div class="modal-header">
-                                                        <h4 class="modal-title">Hapus Pesanan</h4>
+                                                        <?php /* LAMA: <h4 class="modal-title">Hapus Pesanan</h4> */ ?><h4 class="modal-title">Hapus Item</h4>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
 
@@ -214,15 +268,15 @@ $count = mysqli_num_rows($result);
 
                                                         <!-- Modal body -->
                                                         <div class="modal-body">
-                                                            Apakah anda yakin ingin menghapus pesanan ini?
+                                                            <?php /* LAMA: Apakah anda yakin ingin menghapus pesanan ini? */ ?>Apakah anda yakin ingin menghapus item ini?
                                                             <input type="hidden" name="idp" value="<?= $idp ?>">
                                                             <input type="hidden" name="idpr" value="<?= $iddetail ?>">
                                                         </div>
 
                                                         <!-- Modal footer -->
                                                         <div class="modal-footer">
-                                                            <button type="submit" class="btn btn-success" data-bs-dismiss="modal" name="hapusdetail">Submit</button>
-                                                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                                                            <?php /* LAMA: <button type="submit" class="btn btn-success" data-bs-dismiss="modal" name="hapusdetail">Submit</button> */ ?><button type="submit" class="btn btn-success" name="hapusdetail">Hapus</button>
+                                                            <?php /* LAMA: <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button> */ ?><button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
                                                         </div>
 
                                                     </form>
@@ -237,6 +291,7 @@ $count = mysqli_num_rows($result);
 
                                 </tbody>
                             </table>
+                            <h4 class="text-end mt-3">Total: <?= rupiah($total) ?></h4> <!-- [BARU] -->
                         </div>
                     </div>
                 </div>
@@ -244,12 +299,13 @@ $count = mysqli_num_rows($result);
             <footer class="py-4 bg-light mt-auto">
                 <div class="container-fluid px-4">
                     <div class="d-flex align-items-center justify-content-between small">
-                        <div class="text-muted">Copyright &copy; Your Website 2023</div>
+                        <?php /* LAMA: <div class="text-muted">Copyright &copy; Your Website 2023</div>
                         <div>
                             <a href="#">Privacy Policy</a>
                             &middot;
                             <a href="#">Terms &amp; Conditions</a>
-                        </div>
+                        </div> */ ?>
+                        <div class="text-muted">Kasir Rental PS &copy; 2026</div>
                     </div>
                 </div>
             </footer>
@@ -257,13 +313,44 @@ $count = mysqli_num_rows($result);
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="js/scripts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <script src="assets/demo/chart-area-demo.js"></script>
-    <script src="assets/demo/chart-bar-demo.js"></script>
+    <?php /* LAMA: <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script> */ ?>
+    <?php /* LAMA: <script src="assets/demo/chart-area-demo.js"></script> */ ?>
+    <?php /* LAMA: <script src="assets/demo/chart-bar-demo.js"></script> */ ?>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
     <script src="js/datatables-simple-demo.js"></script>
 </body>
 
+
+<!-- [BARU] Modal Ubah Status Pesanan -->
+<div class="modal fade" id="statusModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Ubah Status Pesanan #<?= $idp ?></h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="post">
+                <div class="modal-body">
+                    Status
+                    <select name="status" class="form-control">
+                        <?php foreach (daftarStatus() as $kode => $label) { ?>
+                            <option value="<?= $kode ?>" <?= ($kode == $status) ? 'selected' : '' ?>><?= $label ?></option>
+                        <?php } ?>
+                    </select>
+                    <input type="hidden" name="idp" value="<?= $idp ?>">
+                    <input type="hidden" name="kembali" value="view">
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success" name="ubahstatus">Simpan</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
 
 <!-- The Modal , Modal agak beda dengan video pakai versi bootsrap versi 5-->
 <div class="modal fade" id="myModal">
@@ -272,7 +359,7 @@ $count = mysqli_num_rows($result);
 
             <!-- Modal Header -->
             <div class="modal-header">
-                <h4 class="modal-title">Tambah Barang</h4>
+                <?php /* LAMA: <h4 class="modal-title">Tambah Barang</h4> */ ?><h4 class="modal-title">Tambah Item</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -280,7 +367,7 @@ $count = mysqli_num_rows($result);
 
                 <!-- Modal body -->
                 <div class="modal-body">
-                    Pilih Barang
+                    <?php /* LAMA: Pilih Barang */ ?>Pilih Produk
                     <select name="idproduk" class="form-control">
 
                         <?php
@@ -302,8 +389,8 @@ $count = mysqli_num_rows($result);
                     <input type="hidden" name="idp" value="<?= $idp; ?>">
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success" name="addproduk">Submit</button>
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                    <?php /* LAMA: <?php /* LAMA: <button type="submit" class="btn btn-success" name="addproduk">Submit</button> */ ?><?php if (mysqli_num_rows($getproduk) == 0) { echo '<span class="text-muted me-2">Semua produk sudah ada di pesanan ini</span>'; } ?><button type="submit" class="btn btn-success" name="addproduk" <?= (mysqli_num_rows($getproduk) == 0) ? 'disabled' : '' ?>>Simpan</button>
+                    <?php /* LAMA: <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button> */ ?><button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
                 </div>
             </form>
         </div>
